@@ -1,5 +1,7 @@
 package com.jclngrrd.blynk.library.connection.handler
 
+import cc.blynk.server.core.model.enums.PinType
+import cc.blynk.server.core.protocol.model.messages.common.HardwareMessage
 import com.jclngrrd.blynk.library.pin.PinEvent
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext

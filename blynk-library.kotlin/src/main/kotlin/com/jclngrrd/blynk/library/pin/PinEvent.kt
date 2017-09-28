@@ -1,5 +1,7 @@
 package com.jclngrrd.blynk.library.pin
 
+import cc.blynk.server.core.model.enums.PinType
+
 data class PinEvent(
         val operation: Operation,
         val pinType: PinType,

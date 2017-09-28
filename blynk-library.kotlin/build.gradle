@@ -1,4 +1,7 @@
 apply plugin: 'kotlin'
+apply plugin: 'maven'
+
+group = 'com.github.jocelyngirard'
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
