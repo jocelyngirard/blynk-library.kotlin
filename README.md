@@ -18,4 +18,6 @@ v0.onRead = {
 v0.onWrite = { values ->
   println("V0 has new values: $values") 
 }
+
+v0.write("Push data to V0")
 ```
