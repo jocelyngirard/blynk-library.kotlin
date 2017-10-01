@@ -5,9 +5,9 @@ Blynk library implementation for Kotlin/Java
 
 Usage: 
 ```kotlin
-val blynk = Blynk($authToken) // Connects to Blynk cloud
+val blynk = Blynk(authToken) // Connects to Blynk cloud
 // or
-val blynk = Blynk($authToken, $customHost, $customPort) // Connects to custom server
+val blynk = Blynk(authToken, customHost, customPort) // Connects to custom server
 
 // Get virtual pin 0
 val v0 = blynk.virtualPin(0)

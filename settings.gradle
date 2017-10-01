@@ -1,3 +1,4 @@
 rootProject.name = 'blynk.kotlin'
 include 'blynk-library.kotlin'
+include 'sample'
 
