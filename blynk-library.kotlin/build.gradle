@@ -6,24 +6,31 @@ group = 'com.github.jocelyngirard'
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-jar {
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+configurations {
+    includeInJar
 }
 
+jar {
+    from { configurations.includeInJar.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+ext.nettyVersion = "4.1.15.Final"
+ext.log4jVersion = "2.9.1"
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    implementation "io.netty:netty-all:4.1.15.Final"
-    implementation "org.apache.logging.log4j:log4j-core:2.9.1"
 
-    testImplementation "junit:junit:4.11"
+    implementation fileTree(dir: 'libs', include: '*.jar')
+    implementation "io.netty:netty-all:$nettyVersion"
+    implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
+
+    includeInJar fileTree(dir: 'libs', include: '*.jar')
+    includeInJar "io.netty:netty-all:$nettyVersion"
+    includeInJar "org.apache.logging.log4j:log4j-core:$log4jVersion"
 }
 
