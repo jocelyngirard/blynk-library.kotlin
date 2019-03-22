@@ -1,81 +1,61 @@
 package com.jclngrrd.blynk.library.connection.decoders
 
 import cc.blynk.server.core.protocol.enums.Command
-import cc.blynk.server.core.protocol.enums.Response
-import cc.blynk.server.core.protocol.handlers.DefaultExceptionHandler
+import cc.blynk.server.core.protocol.enums.Command.*
+import cc.blynk.server.core.protocol.model.messages.BinaryMessage
 import cc.blynk.server.core.protocol.model.messages.MessageBase
 import cc.blynk.server.core.protocol.model.messages.MessageFactory.produce
 import cc.blynk.server.core.protocol.model.messages.ResponseMessage
-import cc.blynk.server.core.protocol.model.messages.ResponseWithBodyMessage
-import cc.blynk.server.core.protocol.model.messages.appllication.*
-import com.jclngrrd.blynk.library.extension.d
-import com.jclngrrd.blynk.library.extension.toByteArray
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 import org.apache.logging.log4j.LogManager
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 
-class ClientMessageDecoder : ByteToMessageDecoder(), DefaultExceptionHandler {
+
+class ClientMessageDecoder : ByteToMessageDecoder() {
 
     private val log = LogManager.getLogger(ClientMessageDecoder::class.java)
 
-    override fun decode(context: ChannelHandlerContext, byteBuf: ByteBuf, out: MutableList<Any>) {
-        if (byteBuf.readableBytes() < 5) {
+    override fun decode(ctx: ChannelHandlerContext, input: ByteBuf, out: MutableList<Any>) {
+        if (input.readableBytes() < 5) {
             return
         }
 
-        byteBuf.markReaderIndex()
+        input.markReaderIndex()
 
-        val command = byteBuf.readUnsignedByte()
-        val messageId = byteBuf.readUnsignedShort()
+        val command = input.readUnsignedByte()
+        val messageId = input.readUnsignedShort()
 
         val message: MessageBase
-        when (command) {
-            Command.RESPONSE -> {
-                val responseCode = byteBuf.readUnsignedShort()
-                message = when (responseCode) {
-                    Response.DEVICE_WENT_OFFLINE -> ResponseWithBodyMessage(messageId, Command.RESPONSE, responseCode, byteBuf.readInt())
-                    else -> ResponseMessage(messageId, responseCode)
-                }
+        if (command == Command.RESPONSE) {
+            val responseCode = input.readUnsignedShort()
+            message = ResponseMessage(messageId, responseCode)
+        } else {
+            val length = input.readUnsignedShort()
+
+            if (input.readableBytes() < length) {
+                input.resetReaderIndex()
+                return
             }
-            else -> {
-                val length = byteBuf.readUnsignedShort()
 
-                if (byteBuf.readableBytes() < length) {
-                    byteBuf.resetReaderIndex()
-                    return
+            val buf = input.readSlice(length)
+            when (command) {
+                GET_ENHANCED_GRAPH_DATA,
+                GET_PROJECT_BY_CLONE_CODE,
+                LOAD_PROFILE_GZIPPED,
+                GET_PROJECT_BY_TOKEN -> {
+                    val bytes = ByteArray(buf.readableBytes())
+                    buf.readBytes(bytes)
+                    message = BinaryMessage(messageId, command, bytes)
                 }
-
-                val byteBufSlice = byteBuf.readSlice(length)
-                message = when (command) {
-                    Command.GET_GRAPH_DATA_RESPONSE -> GetGraphDataBinaryMessage(messageId, byteBufSlice.toByteArray())
-                    Command.GET_ENHANCED_GRAPH_DATA -> GetEnhancedGraphDataBinaryMessage(messageId, byteBufSlice.toByteArray())
-                    Command.LOAD_PROFILE_GZIPPED -> LoadProfileGzippedBinaryMessage(messageId, byteBufSlice.toByteArray())
-                    Command.GET_PROJECT_BY_TOKEN -> GetProjectByTokenBinaryMessage(messageId, byteBufSlice.toByteArray())
-                    Command.GET_PROJECT_BY_CLONE_CODE -> GetProjectByCloneCodeBinaryMessage(messageId, byteBufSlice.toByteArray())
-                    else -> produce(messageId, command, byteBufSlice.toString(StandardCharsets.UTF_8))
-                }
-
+                else -> message = produce(messageId, command, buf.toString(StandardCharsets.UTF_8))
             }
+
         }
-        log.d { "Received message: $message" }
+
+        log.trace("Incoming client {}", message)
+
         out.add(message)
     }
-
-    override fun channelInactive(ctx: ChannelHandlerContext) {
-        throw IOException("Server closed client connection.")
-    }
-
-    override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
-        handleGeneralException(context, cause)
-        if (cause is IOException) {
-            context.close()
-            log.d { "End the processus: $cause" }
-            System.exit(0)
-        }
-    }
-
-
 }

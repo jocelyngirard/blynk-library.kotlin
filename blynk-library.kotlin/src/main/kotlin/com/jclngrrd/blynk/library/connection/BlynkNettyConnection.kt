@@ -1,9 +1,10 @@
 package com.jclngrrd.blynk.library.connection
 
 import cc.blynk.server.core.protocol.enums.Command
+import cc.blynk.server.core.protocol.enums.Command.PING
 import cc.blynk.server.core.protocol.handlers.encoders.MessageEncoder
 import cc.blynk.server.core.protocol.model.messages.MessageFactory
-import cc.blynk.server.core.protocol.model.messages.common.PingMessage
+import cc.blynk.server.core.protocol.model.messages.StringMessage
 import cc.blynk.server.core.stats.GlobalStats
 import com.jclngrrd.blynk.library.connection.decoders.ClientMessageDecoder
 import com.jclngrrd.blynk.library.connection.handler.HardwareHandler
@@ -18,6 +19,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import org.apache.logging.log4j.LogManager
 import java.util.concurrent.TimeUnit
+
 
 internal class BlynkNettyConnection(
         override val authToken: String,
@@ -69,6 +71,6 @@ internal class BlynkNettyConnection(
     }
 
     private fun startPing() {
-        nioEventLoopGroup?.scheduleAtFixedRate({ send(PingMessage(777)) }, 12, 12, TimeUnit.SECONDS)
+        nioEventLoopGroup?.scheduleAtFixedRate({ send(StringMessage(777, PING, "")) }, 12, 12, TimeUnit.SECONDS)
     }
 }
