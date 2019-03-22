@@ -58,6 +58,7 @@ internal class BlynkNettyConnection(
     }
 
     override fun close() {
+        log.d { "Shutting down the blynk connection..." }
         nioEventLoopGroup?.shutdownGracefully()
     }
 

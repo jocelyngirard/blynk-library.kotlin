@@ -6,8 +6,11 @@ import java.util.*
 fun main(args: Array<String>) {
 
     val authToken = args.firstOrNull() ?: "invalid_token"
-
     val blynk = Blynk(authToken)
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        blynk.close()
+    })
 
     val v0 = blynk.virtualPin(0)
     v0.onRead = { Date().toString() }
